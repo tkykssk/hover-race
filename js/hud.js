@@ -48,9 +48,10 @@ export class HUD {
   // ========== 速度計（右下・アーク型） ==========
   _drawSpeedometer(speed) {
     const ctx  = this.ctx;
-    const cx   = this.W - 110;
-    const cy   = this.H - 110;
-    const r    = 80;
+    const isPortraitMobile = this.W < 900 && this.H > this.W;
+    const cx   = isPortraitMobile ? this.W - 90 : this.W - 110;
+    const cy   = isPortraitMobile ? this.H - 220 : this.H - 110;
+    const r    = isPortraitMobile ? 64 : 80;
     const maxSpeed = 270;
     const speedNorm = Math.min(1, speed / maxSpeed);
 
@@ -167,9 +168,11 @@ export class HUD {
   // ========== ブーストゲージ（速度計の上） ==========
   _drawBoostBar(charge) {
     const ctx = this.ctx;
-    const bw  = 160, bh = 18;
-    const bx  = this.W - bw - 40;
-    const by  = this.H - 205;
+    const isPortraitMobile = this.W < 900 && this.H > this.W;
+    const bw  = isPortraitMobile ? 140 : 160;
+    const bh  = 18;
+    const bx  = this.W - bw - (isPortraitMobile ? 32 : 40);
+    const by  = this.H - (isPortraitMobile ? 305 : 205);
 
     // ラベル
     ctx.fillStyle = '#00ffff';

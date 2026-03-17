@@ -54,7 +54,11 @@ export class InputManager {
       () => { if (this._touchSteer > 0) this._touchSteer = 0; },
     );
     bindHold(accel,
-      () => { this._touchThrottle = 1; },
+      () => {
+        this._touchThrottle = 1;
+        // アクセル押下時はステア入力を明示的にリセットして意図しない旋回を防ぐ
+        this._touchSteer = 0;
+      },
       () => { this._touchThrottle = 0; },
     );
     bindHold(brake,
