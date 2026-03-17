@@ -45,13 +45,15 @@ export class HUD {
     this._drawMinimap(state);
   }
 
+  get _isPortrait() { return this.W < 700 && this.H > this.W; }
+
   // ========== 速度計（右下・アーク型） ==========
   _drawSpeedometer(speed) {
     const ctx  = this.ctx;
-    const isPortraitMobile = this.W < 900 && this.H > this.W;
-    const cx   = isPortraitMobile ? this.W - 90 : this.W - 110;
-    const cy   = isPortraitMobile ? this.H - 220 : this.H - 110;
-    const r    = isPortraitMobile ? 64 : 80;
+    const pm   = this._isPortrait;
+    const r    = pm ? 50 : 80;
+    const cx   = pm ? this.W / 2 : this.W - 110;
+    const cy   = pm ? this.H - 200 : this.H - 110;
     const maxSpeed = 270;
     const speedNorm = Math.min(1, speed / maxSpeed);
 
@@ -168,11 +170,11 @@ export class HUD {
   // ========== ブーストゲージ（速度計の上） ==========
   _drawBoostBar(charge) {
     const ctx = this.ctx;
-    const isPortraitMobile = this.W < 900 && this.H > this.W;
-    const bw  = isPortraitMobile ? 140 : 160;
+    const pm  = this._isPortrait;
+    const bw  = pm ? 120 : 160;
     const bh  = 18;
-    const bx  = this.W - bw - (isPortraitMobile ? 32 : 40);
-    const by  = this.H - (isPortraitMobile ? 305 : 205);
+    const bx  = pm ? (this.W - bw) / 2 : this.W - bw - 40;
+    const by  = pm ? this.H - 270 : this.H - 205;
 
     // ラベル
     ctx.fillStyle = '#00ffff';
@@ -209,9 +211,10 @@ export class HUD {
   // ========== ミニマップ（右上） ==========
   _drawMinimap(state) {
     const ctx = this.ctx;
-    const size  = 150;
-    const mx = this.W - size - 20;
-    const my = 20;
+    const pm   = this._isPortrait;
+    const size = pm ? 100 : 150;
+    const mx   = this.W - size - (pm ? 10 : 20);
+    const my   = pm ? 10 : 20;
     const padding = 12;
 
     // 背景
