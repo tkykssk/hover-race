@@ -11,12 +11,33 @@ body {
   user-select: none;
 }
 
+/* ========== キャンバス ========== */
+#game-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+}
+
+#hud-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
 /* ========== モバイルタッチ操作 ========== */
 #touch-controls {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 12;
+  z-index: 5;
 }
 
 .touch-left,
@@ -77,36 +98,6 @@ body {
 .touch-right .touch-sub-row {
   display: flex;
   gap: 8px;
-}
-
-@media (min-width: 961px) {
-  #touch-controls {
-    display: none;
-  }
-}
-
-@media (max-width: 960px) and (orientation: landscape) {
-  .touch-left  { bottom: 5vh; }
-  .touch-right { bottom: 5vh; flex-direction: row; align-items: center; gap: 10px; }
-  .touch-btn.circle { width: 54px; height: 54px; }
-}
-
-#game-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-#hud-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
 }
 
 /* ========== スクリーン管理 ========== */
@@ -186,67 +177,6 @@ body {
   gap: 16px;
   margin-bottom: 24px;
   justify-content: center;
-}
-
-/* 縦長・狭い画面向けレイアウト調整 */
-@media (max-width: 900px) {
-  .select-container {
-    width: 92vw;
-    max-width: 92vw;
-    min-width: 0;
-    margin: 1vh auto;
-    padding: 10px 10px 14px;
-    max-height: 92vh;
-    overflow-y: auto;
-  }
-
-  .select-container h2 {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-  }
-
-  .car-list {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-
-  .car-card {
-    width: auto;
-    padding: 8px 10px;
-    font-size: 0.78rem;
-  }
-
-  .car-card .car-name {
-    font-size: 0.82rem;
-    margin-bottom: 4px;
-  }
-
-  .car-card .car-color-dot {
-    width: 18px;
-    height: 18px;
-    margin-bottom: 4px;
-  }
-
-  .car-stat {
-    font-size: 0.65rem;
-    margin: 1px 0;
-  }
-
-  .menu-btn {
-    width: 160px;
-    padding: 10px 16px;
-    font-size: 0.85rem;
-    margin: 4px auto;
-  }
-
-  .menu-container {
-    width: 92vw;
-    max-width: 92vw;
-    margin: 0 auto;
-    padding: 24px 16px;
-  }
 }
 
 .car-card {
@@ -410,10 +340,126 @@ body {
 .result-name { flex: 1; text-align: left; margin-left: 12px; }
 .result-time { color: #aaa; font-size: 0.9rem; }
 
+/* ==========================================================
+   レスポンシブ: 全メディアクエリはベーススタイルより後に配置
+   ========================================================== */
+
+/* PC幅ではタッチ操作を非表示 */
+@media (min-width: 961px) {
+  #touch-controls { display: none; }
+}
+
+/* モバイル横向き */
+@media (max-width: 960px) and (orientation: landscape) {
+  .touch-left  { bottom: 5vh; }
+  .touch-right { bottom: 5vh; flex-direction: row; align-items: center; gap: 10px; }
+  .touch-btn.circle { width: 50px; height: 50px; font-size: 1rem; }
+  .touch-btn.pill { min-width: 70px; padding: 10px 14px; font-size: 0.78rem; }
+  .touch-btn.pill.small { min-width: 50px; padding: 6px 10px; font-size: 0.65rem; }
+}
+
+/* モバイル縦向き・狭い画面 */
 @media (max-width: 900px) {
+  /* --- メニュー --- */
+  .menu-container {
+    width: 90vw;
+    max-width: 90vw;
+    margin: 0 auto;
+    padding: 20px 14px;
+  }
+  .game-title { font-size: 2rem; }
+  .game-title span { font-size: 1.1rem; }
+  .controls-hint { font-size: 0.75rem; margin-top: 14px; }
+
+  /* --- 車両選択 --- */
+  .select-container {
+    width: 94vw;
+    max-width: 94vw;
+    min-width: 0;
+    margin: 1vh auto;
+    padding: 8px 8px 12px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .select-container h2 {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+  .car-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin-bottom: 8px;
+  }
+  .car-card {
+    width: auto;
+    padding: 5px 6px;
+    font-size: 0.65rem;
+    border-radius: 8px;
+    border-width: 1.5px;
+  }
+  .car-card .car-name {
+    font-size: 0.7rem;
+    margin-bottom: 2px;
+  }
+  .car-card .car-color-dot {
+    width: 12px;
+    height: 12px;
+    margin-bottom: 2px;
+  }
+  .car-stat {
+    font-size: 0.55rem;
+    margin: 1px 0;
+    gap: 4px;
+  }
+  .car-stat .bar {
+    height: 3px;
+  }
+  .menu-btn {
+    width: 130px;
+    padding: 7px 12px;
+    font-size: 0.75rem;
+    margin: 3px auto;
+  }
+
+  /* --- 結果 --- */
   .results-container {
     width: 92vw;
     min-width: 0;
-    padding: 24px 16px;
+    padding: 20px 14px;
   }
+  .results-container h2 { font-size: 1.4rem; }
+  .result-item { font-size: 0.85rem; padding: 7px 10px; margin: 4px 0; }
+  .rank-badge { font-size: 1.1rem; width: 28px; }
+
+  /* --- タッチボタン（縦向き用に縮小） --- */
+  .touch-left,
+  .touch-right {
+    bottom: 2vh;
+  }
+  .touch-btn.circle {
+    width: 44px;
+    height: 44px;
+    font-size: 0.9rem;
+  }
+  .touch-btn.pill {
+    min-width: 64px;
+    padding: 10px 14px;
+    font-size: 0.72rem;
+  }
+  .touch-btn.pill.small {
+    min-width: 48px;
+    padding: 5px 8px;
+    font-size: 0.6rem;
+  }
+  .touch-right .touch-sub-row {
+    gap: 5px;
+  }
+  .touch-left,
+  .touch-right {
+    gap: 6px;
+  }
+
+  /* --- カウントダウン --- */
+  .countdown-number { font-size: 6rem; }
 }

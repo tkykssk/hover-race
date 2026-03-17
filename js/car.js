@@ -100,28 +100,18 @@ export class ChibiCar {
     if (!this.chassisBody) return;
 
     const p = this.chassisBody.position;
-    const q = this.chassisBody.quaternion;
     this.meshRoot.position.set(p.x, p.y, p.z);
 
-    // 物理上のヨー角
-    const physQuat = new THREE.Quaternion(q.x, q.y, q.z, q.w);
-    const euler    = new THREE.Euler().setFromQuaternion(physQuat, 'YXZ');
-    const physYaw  = euler.y;
+    // ステアリングで制御する _yaw を直接参照する
+    // （物理ボディのクォータニオンは衝突応答で微小にずれるため使わない）
+    const targetYaw = this.hoverVehicle ? this.hoverVehicle._yaw : 0;
 
-    // 初回は一気に追従
-    if (this._visualYaw === 0 && (physYaw !== 0)) {
-      this._visualYaw = physYaw;
-    } else {
-      // ビジュアル側のヨー角は最大回頭速度を持って徐々に追従させる
-      const MAX_YAW_RATE = 3.5; // 1秒あたりの最大ヨー変化量（ラジアン）
-      const maxDelta = MAX_YAW_RATE * (dt || 0.016);
-      let diff = physYaw - this._visualYaw;
-      // [-PI, PI] に正規化
-      while (diff > Math.PI)  diff -= Math.PI * 2;
-      while (diff < -Math.PI) diff += Math.PI * 2;
-      const clamped = Math.max(-maxDelta, Math.min(maxDelta, diff));
-      this._visualYaw += clamped;
-    }
+    const MAX_YAW_RATE = 3.5;
+    const maxDelta = MAX_YAW_RATE * (dt || 0.016);
+    let diff = targetYaw - this._visualYaw;
+    while (diff > Math.PI)  diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    this._visualYaw += Math.max(-maxDelta, Math.min(maxDelta, diff));
 
     this.meshRoot.rotation.set(0, this._visualYaw, 0);
 
@@ -180,11 +170,9 @@ export class ChibiCar {
   getMeshPosition()  { return this.meshRoot.position.clone(); }
   getMeshQuaternion(){ return this.meshRoot.quaternion.clone(); }
   getForwardVector() {
-    // 進行方向のロジック（AIや物理系の計算）には、ビジュアル用ではなく物理ボディの向きを使う
-    if (this.chassisBody) {
-      const q = this.chassisBody.quaternion;
-      const quat = new THREE.Quaternion(q.x, q.y, q.z, q.w);
-      return new THREE.Vector3(0, 0, 1).applyQuaternion(quat).normalize();
+    if (this.hoverVehicle) {
+      const yaw = this.hoverVehicle._yaw;
+      return new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
     }
     return new THREE.Vector3(0, 0, 1).applyQuaternion(this.meshRoot.quaternion).normalize();
   }

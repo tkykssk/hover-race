@@ -43,6 +43,7 @@ export class HUD {
     this._drawPosition(state.racePosition ?? 1, state.totalCars ?? 3);
     this._drawBoostBar(state.boostCharge ?? 0);
     this._drawMinimap(state);
+    if (state.debugInput) this._drawDebugInput(state);
   }
 
   get _isPortrait() { return this.W < 700 && this.H > this.W; }
@@ -51,9 +52,9 @@ export class HUD {
   _drawSpeedometer(speed) {
     const ctx  = this.ctx;
     const pm   = this._isPortrait;
-    const r    = pm ? 50 : 80;
+    const r    = pm ? 44 : 80;
     const cx   = pm ? this.W / 2 : this.W - 110;
-    const cy   = pm ? this.H - 200 : this.H - 110;
+    const cy   = pm ? this.H - 260 : this.H - 110;
     const maxSpeed = 270;
     const speedNorm = Math.min(1, speed / maxSpeed);
 
@@ -114,67 +115,70 @@ export class HUD {
   // ========== ラップ情報（左上） ==========
   _drawLapInfo(state) {
     const ctx = this.ctx;
-    const x = 20, y = 20;
+    const pm = this._isPortrait;
+    const x = pm ? 8 : 20;
+    const y = pm ? 8 : 20;
+    const pw = pm ? 170 : 230;
+    const ph = pm ? 68 : 90;
 
-    // 背景パネル
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
     ctx.beginPath();
-    ctx.roundRect(x, y, 230, 90, 10);
+    ctx.roundRect(x, y, pw, ph, 10);
     ctx.fill();
 
-    // ラップ
     ctx.fillStyle = '#ffcc00';
-    ctx.font = 'bold 14px sans-serif';
+    ctx.font = pm ? 'bold 11px sans-serif' : 'bold 14px sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    ctx.fillText('LAP', x + 12, y + 12);
+    ctx.fillText('LAP', x + 10, y + 10);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 32px monospace';
-    ctx.fillText(`${state.lapCurrent} / ${state.lapTotal}`, x + 55, y + 6);
+    ctx.font = pm ? 'bold 22px monospace' : 'bold 32px monospace';
+    ctx.fillText(`${state.lapCurrent} / ${state.lapTotal}`, x + (pm ? 40 : 55), y + (pm ? 4 : 6));
 
-    // タイム
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    ctx.font = '13px monospace';
-    ctx.fillText(`TIME  ${this._fmtTime(state.lapTime)}`, x + 12, y + 52);
+    ctx.font = pm ? '10px monospace' : '13px monospace';
+    ctx.fillText(`TIME  ${this._fmtTime(state.lapTime)}`, x + 10, y + (pm ? 36 : 52));
 
     const best = state.bestLapTime != null
       ? `BEST  ${this._fmtTime(state.bestLapTime)}`
       : 'BEST  --:--.--';
     ctx.fillStyle = 'rgba(255,200,0,0.8)';
-    ctx.fillText(best, x + 12, y + 68);
+    ctx.fillText(best, x + 10, y + (pm ? 50 : 68));
   }
 
   // ========== 順位（左上・ラップ下） ==========
   _drawPosition(pos, total) {
     const ctx = this.ctx;
-    const x = 20, y = 122;
+    const pm = this._isPortrait;
+    const x = pm ? 8 : 20;
+    const y = pm ? 84 : 122;
 
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
     ctx.beginPath();
-    ctx.roundRect(x, y, 130, 56, 10);
+    ctx.roundRect(x, y, pm ? 100 : 130, pm ? 40 : 56, 10);
     ctx.fill();
 
     const colors = ['#ffcc00','#cccccc','#c87433','#ffffff'];
     ctx.fillStyle = colors[Math.min(pos - 1, 3)];
-    ctx.font = 'bold 36px monospace';
+    ctx.font = pm ? 'bold 24px monospace' : 'bold 36px monospace';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    ctx.fillText(`P${pos}`, x + 12, y + 6);
+    ctx.fillText(`P${pos}`, x + 10, y + (pm ? 4 : 6));
 
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.font = '13px sans-serif';
-    ctx.fillText(`/ ${total}台`, x + 72, y + 20);
+    ctx.font = pm ? '10px sans-serif' : '13px sans-serif';
+    ctx.fillText(`/ ${total}台`, x + (pm ? 50 : 72), y + (pm ? 12 : 20));
   }
 
   // ========== ブーストゲージ（速度計の上） ==========
   _drawBoostBar(charge) {
     const ctx = this.ctx;
     const pm  = this._isPortrait;
-    const bw  = pm ? 120 : 160;
-    const bh  = 18;
+    const bw  = pm ? 100 : 160;
+    const bh  = 14;
     const bx  = pm ? (this.W - bw) / 2 : this.W - bw - 40;
-    const by  = pm ? this.H - 270 : this.H - 205;
+    const by  = pm ? this.H - 330 : this.H - 205;
 
     // ラベル
     ctx.fillStyle = '#00ffff';
@@ -212,9 +216,9 @@ export class HUD {
   _drawMinimap(state) {
     const ctx = this.ctx;
     const pm   = this._isPortrait;
-    const size = pm ? 100 : 150;
-    const mx   = this.W - size - (pm ? 10 : 20);
-    const my   = pm ? 10 : 20;
+    const size = pm ? 80 : 150;
+    const mx   = this.W - size - (pm ? 8 : 20);
+    const my   = pm ? 8 : 20;
     const padding = 12;
 
     // 背景
@@ -270,6 +274,31 @@ export class HUD {
         ctx.stroke();
       }
     });
+  }
+
+  // ========== デバッグ入力表示 ==========
+  _drawDebugInput(state) {
+    const ctx = this.ctx;
+    const di = state.debugInput;
+    const x = this.W / 2;
+    const y = 10;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.beginPath();
+    ctx.roundRect(x - 120, y, 240, 60, 8);
+    ctx.fill();
+
+    ctx.fillStyle = di.steer !== 0 ? '#ff4444' : '#44ff44';
+    ctx.font = 'bold 13px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`STR:${di.steer.toFixed(2)} THR:${di.throttle.toFixed(1)} BRK:${di.brake.toFixed(1)}`, x, y + 6);
+
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '11px monospace';
+    const actions = state.debugTouchActions?.join(',') || 'none';
+    ctx.fillText(`touch:[${actions}]`, x, y + 24);
+    ctx.fillText(`touchDev:${state.debugIsTouchDevice}`, x, y + 40);
   }
 
   // ========== ユーティリティ ==========

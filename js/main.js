@@ -336,6 +336,9 @@ function gameLoop(timestamp) {
     })),
     waypointPath: trackBuilder.getWaypoints(),
     gameState: currentState,
+    debugInput: input._lastInput,
+    debugTouchActions: [...input._touchActions],
+    debugIsTouchDevice: input._isTouchDevice,
   });
 
   renderer.render(scene, camera);
