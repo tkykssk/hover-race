@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ホバークラフトレース</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+      "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- WebGL レンダリングキャンバス -->
+  <canvas id="game-canvas"></canvas>
+  <!-- 2D HUD オーバーレイキャンバス -->
+  <canvas id="hud-canvas"></canvas>
+
+  <!-- メイン画面 -->
+  <div id="screen-menu" class="screen active">
+    <div class="menu-container">
+      <h1 class="game-title">HOVER<br><span>GRAND PRIX</span></h1>
+      <button id="btn-start" class="menu-btn primary">ゲームスタート</button>
+      <div class="controls-hint">
+        <p>操作方法: WASD / 矢印キー</p>
+        <p>ブースト: Shift / Space</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 車選択画面 -->
+  <div id="screen-car-select" class="screen">
+    <div class="select-container">
+      <h2>カーを選択</h2>
+      <div id="car-list" class="car-list"></div>
+      <button id="btn-race" class="menu-btn primary" disabled>レーススタート</button>
+      <button id="btn-back-menu" class="menu-btn">もどる</button>
+    </div>
+  </div>
+
+  <!-- カウントダウンオーバーレイ -->
+  <div id="screen-countdown" class="screen overlay">
+    <div id="countdown-number" class="countdown-number"></div>
+  </div>
+
+  <!-- 結果画面 -->
+  <div id="screen-results" class="screen overlay">
+    <div class="results-container">
+      <h2 id="results-title">レース結果</h2>
+      <div id="results-list" class="results-list"></div>
+      <button id="btn-retry" class="menu-btn primary">もう一度</button>
+      <button id="btn-menu" class="menu-btn">メニューへ</button>
+    </div>
+  </div>
+
+  <!-- モバイル操作UI -->
+  <div id="touch-controls">
+    <div class="touch-left">
+      <button id="btn-steer-left"  class="touch-btn circle">◀</button>
+      <button id="btn-steer-right" class="touch-btn circle">▶</button>
+    </div>
+    <div class="touch-right">
+      <button id="btn-brake"  class="touch-btn pill small">BRK</button>
+      <button id="btn-throttle" class="touch-btn pill">ACCEL</button>
+      <button id="btn-boost" class="touch-btn pill small">BOOST</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
