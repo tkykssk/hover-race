@@ -1,20 +1,17 @@
 /**
- * input.js - キーボード＋ゲームパッド入力管理
+ * input.js - キーボード＋ゲームパッド＋タッチ入力管理
  */
 export class InputManager {
   constructor() {
     this._keys = new Set();
     this._gamepadIndex = null;
+    this._touchMode = false;
 
-    // タッチ入力状態
-    this._touchThrottle = 0;
-    this._touchBrake    = 0;
-    this._touchSteer    = 0;
-    this._touchBoost    = false;
+    // タッチ入力状態（ポインタIDで管理）
+    this._activePointers = new Map();
 
     window.addEventListener('keydown', e => {
       this._keys.add(e.code);
-      // ページスクロール防止
       if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) {
         e.preventDefault();
       }
@@ -22,83 +19,77 @@ export class InputManager {
     window.addEventListener('keyup', e => this._keys.delete(e.code));
 
     window.addEventListener('gamepadconnected', e => {
-      this._gamepadIndex = e.gamepad.index;
+      if (!this._touchMode) this._gamepadIndex = e.gamepad.index;
     });
     window.addEventListener('gamepaddisconnected', () => {
       this._gamepadIndex = null;
     });
 
-    // タッチボタン
-    const steerL = document.getElementById('btn-steer-left');
-    const steerR = document.getElementById('btn-steer-right');
-    const accel  = document.getElementById('btn-throttle');
-    const brake  = document.getElementById('btn-brake');
-    const boost  = document.getElementById('btn-boost');
+    this._setupTouchButtons();
+  }
 
-    const bindHold = (el, on, off) => {
-      if (!el) return;
-      const start = e => { e.preventDefault(); on(); };
-      const end   = e => { e.preventDefault(); off(); };
-      el.addEventListener('pointerdown', start);
-      el.addEventListener('pointerup', end);
-      el.addEventListener('pointerleave', end);
-      el.addEventListener('pointercancel', end);
+  _setupTouchButtons() {
+    const buttons = {
+      'btn-steer-left':  'steerL',
+      'btn-steer-right': 'steerR',
+      'btn-throttle':    'throttle',
+      'btn-brake':       'brake',
+      'btn-boost':       'boost',
     };
 
-    bindHold(steerL,
-      () => { this._touchSteer = -1; },
-      () => { if (this._touchSteer < 0) this._touchSteer = 0; },
-    );
-    bindHold(steerR,
-      () => { this._touchSteer = 1; },
-      () => { if (this._touchSteer > 0) this._touchSteer = 0; },
-    );
-    bindHold(accel,
-      () => {
-        this._touchThrottle = 1;
-        // アクセル押下時はステア入力を明示的にリセットして意図しない旋回を防ぐ
-        this._touchSteer = 0;
-      },
-      () => { this._touchThrottle = 0; },
-    );
-    bindHold(brake,
-      () => { this._touchBrake = 1; },
-      () => { this._touchBrake = 0; },
-    );
-    bindHold(boost,
-      () => { this._touchBoost = true; },
-      () => { this._touchBoost = false; },
-    );
+    for (const [id, action] of Object.entries(buttons)) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+
+      el.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        el.setPointerCapture(e.pointerId);
+        this._touchMode = true;
+        this._activePointers.set(e.pointerId, action);
+      });
+
+      const release = e => {
+        e.preventDefault();
+        this._activePointers.delete(e.pointerId);
+      };
+      el.addEventListener('pointerup', release);
+      el.addEventListener('pointercancel', release);
+      el.addEventListener('lostpointercapture', release);
+    }
   }
 
   /** @returns {{ throttle: number, brake: number, steer: number, boost: boolean }} */
   getInputState() {
-    let throttle = this._touchThrottle;
-    let brake    = this._touchBrake;
-    let steer    = this._touchSteer;
-    let boost    = this._touchBoost;
+    let throttle = 0, brake = 0, steer = 0, boost = false;
 
-    // キーボード
+    // --- タッチ ---
+    for (const action of this._activePointers.values()) {
+      if (action === 'throttle') throttle = 1;
+      if (action === 'brake')    brake = 1;
+      if (action === 'steerL')   steer = -1;
+      if (action === 'steerR')   steer = 1;
+      if (action === 'boost')    boost = true;
+    }
+
+    // --- キーボード（タッチと併用可） ---
     if (this._keys.has('ArrowUp')   || this._keys.has('KeyW')) throttle = 1;
     if (this._keys.has('ArrowDown') || this._keys.has('KeyS')) brake    = 1;
-    // キーボードのステア入力はやや弱めにする（急な切り返しを抑える）
     const KEY_STEER_STRENGTH = 0.35;
-    if (this._keys.has('ArrowLeft') || this._keys.has('KeyA')) steer    = -KEY_STEER_STRENGTH;
-    if (this._keys.has('ArrowRight')|| this._keys.has('KeyD')) steer    =  KEY_STEER_STRENGTH;
+    if (this._keys.has('ArrowLeft') || this._keys.has('KeyA')) steer = -KEY_STEER_STRENGTH;
+    if (this._keys.has('ArrowRight')|| this._keys.has('KeyD')) steer =  KEY_STEER_STRENGTH;
     if (this._keys.has('ShiftLeft') || this._keys.has('ShiftRight') || this._keys.has('Space')) boost = true;
 
-    // ゲームパッド（優先度: キーボードより低い）
-    if (this._gamepadIndex !== null) {
+    // --- ゲームパッド（タッチモード中は無視） ---
+    if (!this._touchMode && this._gamepadIndex !== null) {
       const gp = navigator.getGamepads()[this._gamepadIndex];
       if (gp) {
-        const gpThrottle = Math.max(0, gp.axes[5] ?? 0);   // RT
-        const gpBrake    = Math.max(0, gp.axes[4] ?? 0);   // LT
-        const gpSteer    = this._deadzone(gp.axes[0], 0.12);// 左スティック横
-
+        const gpThrottle = Math.max(0, gp.axes[5] ?? 0);
+        const gpBrake    = Math.max(0, gp.axes[4] ?? 0);
+        const gpSteer    = this._deadzone(gp.axes[0], 0.15);
         if (gpThrottle > 0.05) throttle = gpThrottle;
         if (gpBrake    > 0.05) brake    = gpBrake;
         if (Math.abs(gpSteer) > 0) steer = gpSteer;
-        if (gp.buttons[0]?.pressed) boost = true; // Aボタン
+        if (gp.buttons[0]?.pressed) boost = true;
       }
     }
 

@@ -417,9 +417,9 @@ function buildCarSelectUI() {
     card.innerHTML = `
       <div class="car-color-dot" style="background:#${cfg.color.toString(16).padStart(6,'0')}"></div>
       <div class="car-name">${cfg.name}</div>
-      <div class="car-stat"><span>スピード</span><span class="bar" style="width:${cfg.speed*8}px"></span></div>
-      <div class="car-stat"><span>加速</span><span class="bar" style="width:${cfg.accel*8}px"></span></div>
-      <div class="car-stat"><span>ハンドル</span><span class="bar" style="width:${cfg.handling*8}px"></span></div>
+      <div class="car-stat"><span>スピード</span><span class="bar" style="width:${cfg.speed*10}%"></span></div>
+      <div class="car-stat"><span>加速</span><span class="bar" style="width:${cfg.accel*10}%"></span></div>
+      <div class="car-stat"><span>ハンドル</span><span class="bar" style="width:${cfg.handling*10}%"></span></div>
     `;
     card.addEventListener('click', () => {
       selectedCarIndex = i;
